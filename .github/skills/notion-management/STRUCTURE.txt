@@ -1,0 +1,108 @@
+NOTION-MANAGEMENT SKILL STRUCTURE
+==================================
+
+📋 SKILL.md (Main Entry Point)
+├── Name: notion-management
+├── Description: Complete guide for Notion API in Node.js/JavaScript
+├── Quick Start: Common operations (fetch, create, update)
+├── Property Types Reference: All supported types and formats
+├── Database Operations: Create, update, fetch databases
+├── Content Guidelines: Markdown, toggles, rich text
+├── Search and Navigation: Finding pages and users
+├── Error Handling: Common errors and solutions
+├── Best Practices: 8 key patterns
+└── Advanced Patterns: Link to advanced-patterns.md
+
+📁 references/ (Detailed Documentation)
+├── advanced-patterns.md
+│   ├── Batch Operations
+│   ├── Data Synchronization
+│   ├── Database Relationships
+│   ├── Performance Optimization
+│   ├── Error Recovery
+│   └── Complex Content Management
+│
+├── examples.md
+│   ├── Creating Databases
+│   ├── Creating Pages
+│   ├── Fetching Content
+│   ├── Syncing External APIs
+│   ├── Project Templates
+│   ├── Searching
+│   ├── Error Handling Patterns
+│   └── Building Documents Programmatically
+│
+└── troubleshooting.md
+    ├── Property Validation Errors (multi_select, dates, checkboxes)
+    ├── Database Schema Issues (property names, data_source_id)
+    ├── Content Issues (toggles, markdown, links)
+    ├── Permission Errors
+    ├── Performance & Rate Limits
+    └── Quick Reference Table
+
+📁 scripts/ (Utilities)
+└── validate-properties.ts
+    ├── Validates page properties against database schema
+    ├── Catches errors before sending to Notion API
+    ├── Checks types, options, dates, special formats
+    └── Usage: pnpm dlx tsx scripts/validate-properties.ts <db-id> '<json>'
+
+KEY DESIGN DECISIONS
+====================
+
+1. Progressive Disclosure
+   - SKILL.md: Core workflows, quick start, best practices (~500 lines)
+   - references/: Detailed guides loaded only when needed
+   - scripts/: Utilities for validation and automation
+
+2. Multi-Select Limitation Documented
+   - API doesn't support multiple options in single call
+   - Documented workaround: use separate updates or multiple pages
+   - Examples show correct pattern
+
+3. Expanded Property Formats Emphasized
+   - Date: date:PropertyName:start, date:PropertyName:end, date:PropertyName:is_datetime
+   - Place: place:PropertyName:name, place:PropertyName:address, etc.
+   - Special names: userDefined:id, userDefined:url
+   - Multiple examples and error cases shown
+
+4. Toggle/Collapsible Content Documented
+   - Clear syntax with tab indentation
+   - Common mistakes highlighted
+   - Examples in multiple references
+
+5. Error-Driven Documentation
+   - Troubleshooting guide focuses on real error messages
+   - Each error includes: causes, solutions, code examples
+   - Quick reference table at end
+
+WHEN THIS SKILL ACTIVATES
+=========================
+
+Claude loads this skill when user asks about:
+- Creating Notion pages or databases
+- Managing Notion content or properties
+- Working with Notion API in Node.js/JavaScript
+- Debugging Notion API errors
+- Setting up Notion automation/syncing
+- Complex Notion workflows
+
+KNOWN LIMITATIONS & DOCUMENTED
+==============================
+
+1. Multi-select: Can only pass single option (API limitation, documented)
+2. No batch database schema updates: Must be sequential (documented in troubleshooting)
+3. Toggles require specific indentation: Must use tabs (documented with examples)
+4. Rate limits: Must add delays between batch operations (documented with code)
+
+LEARNING FROM ERRORS
+====================
+
+This skill was created after experiencing these errors:
+✓ "Invalid multi_select value" - Now documented with solutions
+✓ Wrong multi_select format (arrays, commas) - Now shows correct usage
+✓ Missing date:Property:start format - Now prominent in reference
+✓ Toggle indentation issues - Now clear syntax and examples
+✓ Data source vs database ID confusion - Now explained with examples
+
+The skill turned these hard-learned lessons into documented knowledge.
