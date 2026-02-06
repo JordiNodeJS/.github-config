@@ -1,0 +1,35 @@
+---
+description: "Initialize a Movie Tracker project using Neon MCP database, Next.js 16, shadcn/ui, and Tailwind CSS. Creates dashboard for trending movies, search functionality, and detail pages. Apply when setting up the project from scratch or reinitializing the application."
+globs:
+alwaysApply: false
+---
+
+# Movie Tracker Initialization
+
+Build a Movie Tracker application using Neon MCP database, Next.js 16, shadcn/ui, and Tailwind CSS.
+
+## Features to Initialize
+
+- Dashboard to view trending movies
+- Search functionality to find movies by title
+- Detail page for each movie showing its information
+- Neon MCP database to store and retrieve movie data
+- TMDB API to fetch movie details
+- UI built with shadcn/ui components styled with Tailwind CSS
+
+## Database Setup
+
+1. Access the database and create a schema called `movies-tracker`
+2. Reference the `database.mdc` rule for connection details and Neon MCP integration
+
+## Steps
+
+1. Set up Next.js 16 project with App Router
+2. Configure Prisma ORM with Neon adapter
+3. Set up TMDB API integration in `src/lib/tmdb.ts`
+4. Create database schema with Prisma
+5. Build trending movies dashboard page
+6. Build movie search functionality
+7. Build movie detail page
+8. Configure shadcn/ui components
+9. Apply Tailwind CSS styling

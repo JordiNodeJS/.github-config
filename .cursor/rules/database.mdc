@@ -1,0 +1,51 @@
+---
+description: "Database patterns for Prisma ORM with Neon Serverless Postgres: schema conventions, queries, and MCP integration."
+globs: "prisma/**,src/lib/prisma.ts,src/lib/actions.ts"
+alwaysApply: false
+---
+
+# Database Patterns
+
+## Prisma ORM Conventions
+
+- **Denormalization**: Store `title`, `posterPath`, `voteAverage` in related models
+- **Prisma Client**: Always use `src/lib/prisma.ts` singleton instance
+- **ID Generation**: Use `cuid()` for all user-related models
+- **Neon Connection**: Configured via `prisma/adapter-neon`
+- **Schema file**: `prisma/schema.prisma`
+
+## Common Operations
+
+```bash
+pnpm db:push      # Sync Prisma schema with database
+pnpm db:studio    # Open Prisma Studio
+```
+
+## Query Patterns
+
+- Use Prisma's `select` for partial data fetching to minimize payload
+- Use `include` sparingly; prefer explicit `select`
+- Wrap mutations in Server Actions with `"use server"` directive
+- Always call `ensureUser()` before database operations that require auth
+
+## Neon MCP Integration
+
+This project uses Neon as the PostgreSQL serverless database. MCP tools are available for database management:
+
+- **Default database**: `neondb`
+- **Default project**: `neon-indigo-kite` (ID: `wispy-poetry-52762475`)
+- **Default branch**: `main`
+
+Use Neon MCP tools for:
+- Listing projects, databases, and tables
+- Running SQL queries
+- Managing schema migrations and branches
+- Getting connection strings
+
+## Best Practices
+
+1. Verify before destructive operations (DROP, DELETE, TRUNCATE)
+2. Use transactions for related multi-step operations
+3. Validate data types and constraints before insert/modify
+4. Document schema changes in `ddbb/docs/`
+5. Use Neon branches for schema experiments

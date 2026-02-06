@@ -1,0 +1,95 @@
+---
+description: "Project architecture, data flow, service boundaries, key files, and deployment info for Movies Tracker (Next.js 16 + Neon + TMDB)."
+globs:
+alwaysApply: true
+---
+
+# Project Architecture
+
+**Stack**: Next.js 16 (App Router), Prisma ORM, Neon Serverless Postgres, TMDB API, Tailwind CSS 4
+
+**Package Manager**: `pnpm` (v10+). Use `pnpm dlx` instead of `npx`.
+
+## Quick Commands
+
+```bash
+pnpm install          # Install dependencies
+pnpm dev              # Start development server
+pnpm build            # Runs prisma generate && next build
+pnpm type-check       # Type checking
+pnpm lint             # Linting
+pnpm db:push          # Sync Prisma schema with database
+pnpm db:studio        # Open Prisma Studio
+pnpm dlx kill-port <port>  # Free occupied ports
+```
+
+## Major Components
+
+1. **Frontend**: Next.js 16 App Router with React Server Components
+2. **Backend**: Server Actions for mutations, API routes for external integrations
+3. **Database**: Neon Serverless Postgres with Prisma ORM
+4. **External API**: TMDB API integration for movie data
+5. **Authentication**: JWT-based auth with cookie storage
+
+## Data Flow
+
+```
+User → Next.js App Router → Server Components → TMDB API / Prisma → Database
+                          ↓
+                     Server Actions (mutations)
+```
+
+## Service Boundaries
+
+- **User Service**: Authentication, profile management
+- **Movie Service**: TMDB integration, movie data caching
+- **Watchlist Service**: User-specific movie tracking
+- **Recommendation Service**: Personalized movie suggestions
+
+## Cross-Component Communication
+
+- **Server Actions**: Shared mutations across components
+- **Context API**: User session and theme context
+- **URL Search Params**: Client-side state management
+
+## Key Files Reference
+
+### Core Architecture
+
+- `prisma/schema.prisma`: Database schema and models
+- `src/lib/prisma.ts`: Prisma client configuration
+- `src/lib/tmdb.ts`: TMDB API integration layer
+- `src/lib/actions.ts`: Server Actions and auth utilities
+
+### UI Components
+
+- `src/components/navbar.tsx`: Main navigation
+- `src/components/movie-card.tsx`: Movie display component
+- `src/components/theme-toggle.tsx`: Theme switching
+
+### Pages
+
+- `src/app/[locale]/page.tsx`: Home page
+- `src/app/[locale]/movie/[id]/page.tsx`: Movie details
+- `src/app/[locale]/watchlist/page.tsx`: User watchlist
+
+## Code Organization
+
+- Keep Server Components in `src/app`
+- Keep Client Components in `src/components`
+- Keep utility functions in `src/lib`
+- Keep hooks in `src/hooks`
+
+## Deployment
+
+- **Platform**: Vercel
+- **Process**: Automatic deployment on push to main branch
+- **Build Command**: `pnpm build`
+- **Environment**: Production variables configured in Vercel dashboard
+
+## External Dependencies
+
+1. **TMDB API**: Movie data, images, recommendations
+2. **Neon Postgres**: Database storage via Prisma
+3. **Authentication**: JWT-based (custom implementation)
+4. **Tailwind CSS 4**: Styling framework

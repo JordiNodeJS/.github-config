@@ -1,0 +1,72 @@
+---
+description: "JWT authentication flow, password security, session management, and protected Server Action patterns."
+globs: "src/lib/auth-*.ts,src/lib/actions.ts"
+alwaysApply: false
+---
+
+# Authentication System
+
+## JWT Authentication Flow
+
+```
+1. User submits login form → login() in src/lib/auth-actions.ts
+2. Password verified using scrypt hash from src/lib/auth-utils.ts
+3. JWT token created with signJWT() using HS256 algorithm
+4. Token stored in auth_token cookie (httpOnly, secure, 7-day expiry)
+5. Subsequent requests use ensureUser() from src/lib/actions.ts
+6. User ID extracted from JWT payload for database operations
+```
+
+## Key Authentication Files
+
+- `src/lib/auth-actions.ts`: Login/logout/register functions
+- `src/lib/auth-utils.ts`: Password hashing and JWT utilities
+- `src/lib/actions.ts`: `ensureUser()` middleware for Server Actions
+
+## JWT Implementation Details
+
+- **Algorithm**: HS256 with SHA-256
+- **Secret**: `JWT_SECRET` environment variable
+- **Token Structure**: `header.body.signature` (base64url encoded)
+- **Payload**: Contains `userId`, `email`, and `iat` (issued at timestamp)
+- **Validation**: Uses `timingSafeEqual` to prevent timing attacks
+
+## Password Security
+
+- **Hashing**: scrypt with random 16-byte salt
+- **Storage**: `hash.salt` format in database
+- **Verification**: Constant-time comparison to prevent timing attacks
+
+## Session Management
+
+- **Cookie**: `auth_token` (httpOnly, secure in production)
+- **Expiry**: 7 days from creation
+- **Logout**: Deletes cookie and redirects to home
+
+## Usage in Server Actions
+
+```typescript
+"use server";
+
+import { ensureUser } from "@/lib/actions";
+
+export async function protectedAction() {
+  const user = await ensureUser(); // Throws if unauthorized
+  await prisma.someOperation({ where: { userId: user.id } });
+}
+```
+
+## Common Authentication Patterns
+
+1. **Registration**: Hash password -> Create user -> Redirect to login
+2. **Login**: Verify credentials -> Create JWT -> Set cookie -> Redirect
+3. **Protected Routes**: Call `ensureUser()` -> Check user existence -> Proceed
+4. **Logout**: Delete cookie -> Redirect to home
+
+## Security Best Practices
+
+- Always use `ensureUser()` in Server Actions
+- Never expose JWT secret in client code
+- Use `httpOnly` and `secure` flags for cookies
+- Rotate `JWT_SECRET` in production
+- Use scrypt for password hashing

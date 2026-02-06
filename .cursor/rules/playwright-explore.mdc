@@ -1,0 +1,24 @@
+---
+description: "Explores a running website using browser automation (Chrome DevTools MCP) for testing purposes. Navigates pages, identifies core features, documents UI elements and locators, and proposes test cases. Apply when user asks to explore a website for testing, generate test cases from a live site, or identify key user flows."
+globs:
+alwaysApply: false
+---
+
+# Website Exploration for Testing
+
+Explores a running website using browser automation to identify key functionalities and generate test cases.
+
+## When to Apply
+
+- User asks to explore a website for testing
+- Need to identify core features and user flows
+- Want to generate test cases from a live site
+
+## Instructions
+
+1. Navigate to the provided URL using Chrome DevTools MCP. If no URL is provided, ask the user.
+2. Identify and interact with 3-5 core features or user flows.
+3. Document user interactions, relevant UI elements (and their locators), and expected outcomes.
+4. Close the browser context upon completion.
+5. Provide a concise summary of findings.
+6. Propose and generate test cases based on the exploration.

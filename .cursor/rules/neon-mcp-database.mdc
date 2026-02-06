@@ -1,0 +1,61 @@
+---
+description: "Manages Neon PostgreSQL databases using MCP tools. Covers project management, SQL queries, schema modifications, branching, migrations, and troubleshooting. Apply when user needs database operations via MCP, wants to run SQL, manage Neon projects, or work with database schema through natural language."
+globs:
+alwaysApply: false
+---
+
+# Neon MCP Database Management
+
+Manages Neon PostgreSQL serverless databases through MCP (Model Context Protocol).
+
+## Project Defaults
+
+- **Database**: `neondb`
+- **Project**: `neon-indigo-kite` (ID: `wispy-poetry-52762475`)
+- **Branch**: `main` (br-broad-union-abfa4pb3)
+
+When operations don't specify a project or database, use these defaults.
+
+## MCP Configuration
+
+1. **Remote (OAuth) - Recommended**: URL `https://mcp.neon.tech/mcp` (no API key needed)
+2. **Local (API Key)**: Standard config in `config/cursor-mcp-neon-config.json`
+
+## Common Operations
+
+### Project Management
+- List projects: "List my Neon projects"
+- Search resources: "Search for 'production' across my Neon resources"
+
+### Database Operations
+- List databases, get connection strings, list tables, view schema
+
+### SQL Queries
+- SELECT, filtered queries, aggregations, column info
+
+### Schema Modifications
+- Create tables, add/modify/remove columns, create indexes
+
+### Branching and Migrations
+- Create feature branches, generate schema diffs, apply migrations
+
+## Best Practices
+
+1. **Verify before destructive operations** (DROP, DELETE, TRUNCATE) - always confirm with user
+2. Document changes in `ddbb/docs/`
+3. Use transactions for related multi-step operations
+4. Validate data types before insert/modify
+5. Use Neon branches for schema experiments
+
+## Security
+
+- Review LLM-requested operations before executing
+- MCP is primarily for development, not production
+- Never commit API keys to the repository
+- Use read-only mode when possible (`x-read-only: true` header)
+
+## Troubleshooting
+
+- **MCP not responding**: Check server config in Cursor Settings, restart Cursor
+- **Auth errors**: Re-authorize OAuth (remote) or verify API key (local)
+- **Operation failures**: Verify database exists, check permissions, review Cursor logs

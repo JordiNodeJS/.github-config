@@ -1,0 +1,44 @@
+---
+description: "Merges mature lessons from a domain memory file into its instruction file with zero knowledge loss and minimal redundancy. Apply when user says '/memory-merger' or wants to consolidate accumulated memory lessons into permanent instructions."
+globs:
+alwaysApply: false
+---
+
+# Memory Merger
+
+Consolidates mature learnings from a domain's memory file into its instruction file, ensuring knowledge preservation with minimal redundancy.
+
+## Syntax
+
+```
+/memory-merger >domain-name [scope]
+```
+
+- `>domain-name` - Required. The domain to merge (e.g., `>clojure`, `>git-workflow`)
+- `[scope]` - Optional. One of: `global`, `user`, `workspace`, `ws`. Defaults to `global`
+
+## Process
+
+### 1. Parse Input and Read Files
+
+- Extract domain and scope from user input
+- Read both memory file and instruction file (memory file must exist; instruction file may not)
+
+### 2. Analyze and Propose
+
+Review all memory sections and present them for merger consideration. **Stop and wait for user approval.**
+
+### 3. Define Quality Bar
+
+- **Zero knowledge loss** - Every detail, example, and nuance preserved
+- **Minimal redundancy** - Overlapping guidance consolidated
+- **Maximum scannability** - Clear hierarchy, parallel structure, logical grouping
+
+### 4. Merge and Iterate
+
+Draft merged instructions without updating files yet. Evaluate against quality bar and refine until 10/10.
+
+### 5. Update Files
+
+- Create or update the instruction file with final merged content
+- Remove merged sections from the memory file

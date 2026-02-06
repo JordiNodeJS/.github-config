@@ -1,0 +1,26 @@
+{
+  "Name": {"type": "title", "name": "Name"},
+  "Status": {
+    "type": "select",
+    "name": "Status",
+    "options": [
+      {"name": "Backlog"},
+      {"name": "In Progress"},
+      {"name": "Done"}
+    ]
+  },
+  "Tags": {
+    "type": "multi_select",
+    "name": "Tags",
+    "options": [
+      {"name": "Next.js"},
+      {"name": "TypeScript"},
+      {"name": "Prisma"}
+    ]
+  },
+  "Due Date": {"type": "date", "name": "Due Date"},
+  "Active": {"type": "checkbox", "name": "Active"},
+  "Website": {"type": "url", "name": "Website"},
+  "Priority": {"type": "number", "name": "Priority"},
+  "Office": {"type": "place", "name": "Office"}
+}

@@ -1,0 +1,15 @@
+---
+description: "Generates VS Code status bar visual styles configuration. Creates .vscode folder and settings for the editor status bar appearance. Apply when user wants to customize the VS Code bottom status bar styling."
+globs:
+alwaysApply: false
+---
+
+# VS Code Status Bar Configuration
+
+Generates visual styles for the VS Code editor status bar (bottom bar only).
+
+## Instructions
+
+1. Create a `.vscode` folder in the project root if it doesn't exist
+2. Generate visual styles configuration specifically for the bottom status bar
+3. Apply the configuration to `.vscode/settings.json`

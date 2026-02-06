@@ -1,0 +1,49 @@
+---
+description: "Synchronizes project rules between .github/ and .trae/rules/ directories. Migrates and adapts rules from GitHub Copilot format to TRAE format while maintaining AGENTS.md compatibility. Apply when user says 'sync trae rules', 'update trae config', or needs to synchronize AI configurations across agents."
+globs:
+alwaysApply: false
+---
+
+# Sync TRAE Rules from GitHub Conventions
+
+Migrates and adapts all rules, conventions, and instructions from `.github/` to `.trae/rules/` following TRAE's documentation standards.
+
+## Prerequisites
+
+1. Source files exist: `.github/copilot-instructions.md`, `AGENTS.md`
+2. TRAE docs access: https://docs.trae.ai/
+
+## Process (8 Phases)
+
+### Phase 1: Documentation Review
+- Check TRAE official docs for latest schema
+- Verify current TRAE version for breaking changes
+
+### Phase 2: Content Audit
+- Analyze `.github/copilot-instructions.md` content
+- Check skills from `.github/skills/`
+- Identify sections missing in `.trae/rules/`
+
+### Phase 3: TRAE Rule Structure
+- Follow official `project_rules.md` structure
+
+### Phase 4: Adaptation Rules
+- Expand concise instructions to detailed format with code examples
+- Add rationale sections for non-obvious rules
+- Include TRAE-specific debugging tips
+
+### Phase 5: Sync Skills and Prompts
+- Adapt each skill from `.github/skills/` for TRAE
+
+### Phase 6: Validation
+- Verify all sections are present
+- Check code examples compile
+- Ensure no broken references
+
+### Phase 7: Documentation Update
+- Update `SYNC_LOG.md` with sync date and changes
+- Update `QUICK_SYNC.md` if process changed
+
+### Phase 8: Quality Assurance
+- Compare section-by-section with source
+- Verify no information was lost

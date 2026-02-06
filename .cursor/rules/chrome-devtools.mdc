@@ -1,0 +1,62 @@
+---
+description: "Debug and verify web applications using Chrome DevTools browser automation. Covers DOM inspection, console logs, network requests, screenshots, and Next.js-specific debugging. Apply when user needs to debug UI issues, verify visual rendering, inspect runtime errors, or test web interactions."
+globs:
+alwaysApply: false
+---
+
+# Chrome DevTools Debugging
+
+Use Chrome DevTools (browser automation) as the primary tool for debugging and verifying web applications visually.
+
+## When to Apply
+
+- Verify the visual state of an application
+- Debug rendering errors or UI problems
+- Inspect DOM, CSS styles, or console logs
+- Verify routes and pages work correctly
+- Detect runtime errors not visible on the server
+
+## When NOT to Apply
+
+- Static code verification (use `read_file` or `grep`)
+- Configuration file checks
+- Linter errors (use `read_lints`)
+- Code syntax verification
+
+## Recommended Workflow
+
+### 1. Initial Verification
+
+1. Start the dev server (if not running)
+2. Use `browser_navigate` to load the page
+3. Use `browser_snapshot` (prefer over screenshots for context efficiency)
+4. Check `browser_console_messages` for errors
+5. Check network requests if API problems suspected
+
+### 2. Debugging Specific Issues
+
+1. Navigate to the problematic page
+2. Use `evaluate` to inspect DOM state
+3. Capture console messages for JavaScript errors
+4. Take screenshots to document the problem
+5. Verify network requests for API issues
+
+### 3. Post-Implementation Verification
+
+1. After changes, ALWAYS verify visually with browser
+2. Navigate to all affected routes
+3. Test key interactions (clicks, forms)
+4. Verify no console errors
+5. Confirm design looks correct
+
+## Context Optimization
+
+- **Prioritize `browser_snapshot`**: Always use the accessibility tree snapshot before visual captures
+- **Selective screenshots**: Use `browser_take_screenshot` only when strictly necessary
+- **Reduced size**: Keep captures at 800x600 px max, use lightweight formats (JPEG quality 60, WebP)
+
+## Next.js Integration
+
+- Use `nextjs_index` to discover running Next.js servers
+- Use `nextjs_call` for compilation and runtime errors
+- Combine with browser automation for complete visual verification

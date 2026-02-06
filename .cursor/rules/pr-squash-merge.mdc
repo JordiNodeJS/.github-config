@@ -1,0 +1,65 @@
+---
+description: "Squash and merge an existing Pull Request using GitHub CLI. Verifies PR state, checks CI status, handles conflicts, performs squash merge, and cleans up branches. Apply when user says 'squash y merge', 'merge the PR', or wants to merge an open PR."
+globs:
+alwaysApply: false
+---
+
+# PR Squash Merge
+
+Squash and merge a Pull Request with full status verification, conflict handling, and branch cleanup.
+
+## Prerequisites
+
+- `gh` CLI installed and authenticated
+- PR number known (or detect from current branch)
+
+## Verification Steps
+
+```bash
+gh pr view <pr-number> --json state,mergeable,mergeStateStatus
+gh pr checks <pr-number>
+gh pr review <pr-number> --list
+```
+
+## State Handling
+
+| State | Action |
+|-------|--------|
+| OPEN + CLEAN | Proceed to merge |
+| OPEN + CONFLICTING | Report conflicts, do not merge |
+| OPEN + BEHIND | Update base branch, re-check |
+| CLOSED | Report already closed |
+| MERGED | Report already merged |
+
+## Merge Command
+
+```bash
+gh pr merge <pr-number> --squash --delete-branch
+```
+
+## Post-Merge Cleanup
+
+```bash
+git checkout main
+git pull origin main
+git branch -D <branch>
+```
+
+## Error Labels
+
+- Conflicts: `status/conflicts`
+- CI failed: `ci/failed`
+- Needs review: `status/needs-review`
+
+## Output Format
+
+```markdown
+- pr_number: <number>
+- pr_url: <url>
+- branch: <branch>
+- merge_commit: <hash>
+- deleted_remote_branch: true/false
+- deleted_local_branch: true/false
+- warnings: [...]
+- errors: [...]
+```

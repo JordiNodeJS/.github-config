@@ -1,0 +1,85 @@
+---
+description: "Creates, reviews, and merges Pull Requests using GitHub CLI (gh). Handles full PR lifecycle: local validation (lint, test, build), PR creation/update with body-file, labeling, assignee/reviewer management, context comments, and optional squash merge. Apply when user wants to create a PR, push changes as a PR, or says 'crea la pr'."
+globs:
+alwaysApply: false
+---
+
+# PR Create — Full Lifecycle with GitHub CLI
+
+Creates or updates a Pull Request using `gh` CLI with complete validation, labeling, and optional merge.
+
+## Defaults
+
+- **Assignee**: JordiNodeJS
+- **Base branch**: main
+- **Merge strategy**: squash and merge
+- **Title format**: `<type>(<scope>): <brief-description>`
+
+## Step-by-Step Flow
+
+### 1. Preparation
+
+- Detect current branch: `git rev-parse --abbrev-ref HEAD`
+- Read context files: `.github/project/PROJECT-STATE.md`, relevant docs
+
+### 2. Local Validations (pre-PR)
+
+```bash
+pnpm lint:fix    # ESLint
+pnpm test        # If test script exists
+pnpm build       # Build check
+```
+
+If any check fails, mark the PR with `ci/failed` or `status/blocked`.
+
+### 3. Check Existing PR
+
+```bash
+gh pr list --head <branch> --json number,url,state,title
+```
+
+### 4. Create or Update PR
+
+- **New PR**: `gh pr create --title "<type>(<scope>): <desc>" --body-file <file.md> --base main --head <branch> --assignee JordiNodeJS`
+- **Existing PR**: `gh pr edit <pr-number> --title "..." --body-file <file.md>`
+
+**IMPORTANT**: Always use `--body-file` instead of `--body` to avoid UTF-8 encoding issues on Windows. Avoid emojis in PR comments.
+
+### 5. Labels and Assignment
+
+Suggested labels (create if missing with `gh label create`):
+- `type/feature`, `area/<area>`, `status/ready-for-review`, `priority/medium`, `ci/required`, `auto-changelog`
+
+### 6. Context Comment
+
+Add a comment with context extracts and local check results using `--body-file`. Do NOT use `--body` with `\n` literals. Do NOT include emojis.
+
+### 7. Conditional Merge (optional)
+
+Only merge if all CI checks pass and required approvals exist:
+
+```bash
+gh pr merge <pr> --squash --delete-branch
+```
+
+### 8. Post-Merge Cleanup
+
+- Delete remote branch: `git push origin --delete <branch>`
+- Delete local branch: `git branch -D <branch>`
+
+### 9. Idempotency
+
+All actions must be re-executable without duplicate effects. If conflicts exist, tag `status/conflicts` and do not delete the branch.
+
+## Output Format
+
+```markdown
+- pr_number: <number>
+- pr_url: <url>
+- branch: <branch>
+- merge_commit: <hash or null>
+- deleted_remote_branch: true/false
+- deleted_local_branch: true/false
+- warnings: [...]
+- errors: [...]
+```

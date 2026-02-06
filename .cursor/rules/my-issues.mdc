@@ -1,0 +1,20 @@
+---
+description: "Lists GitHub issues in the current repository assigned to the current user and suggests which to focus on based on age, comments, and status. Apply when user says 'my issues', 'list my issues', or wants to see assigned issues."
+globs:
+alwaysApply: false
+---
+
+# My Issues
+
+Lists issues in the current repository assigned to you and suggests which ones to focus on.
+
+## Instructions
+
+1. Identify the current repository context
+2. List issues assigned to the current user using GitHub CLI or MCP tools
+3. Analyze issues by:
+   - Age (older issues may need attention)
+   - Number of comments (active discussions)
+   - Status (open/closed)
+4. Suggest issues to focus on based on priority signals
+5. Present results in a clear, actionable format

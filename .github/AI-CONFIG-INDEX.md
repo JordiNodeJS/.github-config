@@ -7,10 +7,12 @@ This file provides a comprehensive index of all AI agent configurations in this 
 | Configuration Type | File Location | Purpose |
 |-------------------|---------------|---------|
 | **Universal Standard** | [`/AGENTS.md`](../AGENTS.md) | Source of truth for all AI agents |
+| **Cursor Rules** | [`.cursor/rules/`](../.cursor/rules/) | Cursor project rules (from AGENTS.md + prompts) |
+| **Cursor Skills** | [`.cursor/skills/`](../.cursor/skills/) | Cursor agent skills (from `.github/skills/`) |
 | **GitHub Copilot** | [`.github/copilot-instructions.md`](copilot-instructions.md) | GitHub Copilot-specific instructions |
 | **TRAE** | [`.trae/rules/project_rules.md`](../.trae/rules/project_rules.md) | TRAE AI assistant rules |
-| **Skills Library** | [`.github/skills/`](skills/) | Reusable skill modules |
-| **Prompts Library** | [`.github/prompts/`](prompts/) | Reusable prompt templates |
+| **Skills Library** | [`.github/skills/`](skills/) | Reusable skill modules (also in `.cursor/skills/`) |
+| **Prompts Library** | [`.github/prompts/`](prompts/) | Reusable prompt templates (migrated to `.cursor/rules/`) |
 | **Agent Configs** | [`.github/agents/`](agents/) | Specific agent configurations |
 | **Basic Instructions** | [`.github/instructions/`](instructions/) | Foundational instructions |
 
@@ -22,16 +24,16 @@ This file provides a comprehensive index of all AI agent configurations in this 
 │   All AI agents should reference this   │
 └─────────────────────────────────────────┘
                     │
-        ┌───────────┴───────────┐
-        ▼                       ▼
-┌───────────────┐      ┌───────────────────┐
-│ .github/      │      │ .trae/rules/      │
-│ copilot-      │      │ project_rules.md  │
-│ instructions  │      │                   │
-│ .md           │      │ (TRAE-specific    │
-│               │      │  adaptations)     │
-│ (Concise)     │      │ (Detailed)        │
-└───────────────┘      └───────────────────┘
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+┌───────────────┐ ┌───────────────────┐ ┌───────────────────┐
+│ .github/      │ │ .cursor/          │ │ .trae/rules/      │
+│ copilot-      │ │ rules/ (15 rules) │ │ project_rules.md  │
+│ instructions  │ │ skills/ (19)      │ │                   │
+│ .md           │ │                   │ │ (TRAE-specific    │
+│               │ │ (Cursor-specific  │ │  adaptations)     │
+│ (Concise)     │ │  adaptation)      │ │ (Detailed)        │
+└───────────────┘ └───────────────────┘ └───────────────────┘
 ```
 
 ## 🎯 File Purposes
@@ -51,7 +53,29 @@ This file provides a comprehensive index of all AI agent configurations in this 
   - Development workflows
   - Common pitfalls
 
-### 2. GitHub Copilot
+### 2. Cursor Configuration
+
+#### `.cursor/rules/`
+- **Purpose**: Cursor project rules
+- **Audience**: Cursor AI agent
+- **Style**: Focused, domain-specific with frontmatter metadata
+- **Sources**: AGENTS.md (4 domain rules) + `.github/prompts/` (11 agent-decided rules)
+- **Files (from AGENTS.md)**:
+  - `architecture.mdc` - Always applied; stack, data flow, key files
+  - `conventions.mdc` - Auto-attached to `src/**`; code style, naming, patterns
+  - `database.mdc` - Auto-attached to `prisma/**`; Prisma + Neon patterns
+  - `authentication.mdc` - Auto-attached to `src/lib/auth-*`; JWT auth system
+- **Files (from prompts)**:
+  - `pr-create.mdc`, `pr-squash-merge.mdc`, `chrome-devtools.mdc`, `playwright-explore.mdc`, `memory-keeper.mdc`, `memory-merger.mdc`, `init-master.mdc`, `sync-trae-rules.mdc`, `my-issues.mdc`, `neon-mcp-database.mdc`, `bar-vscode.mdc`
+
+#### `.cursor/skills/`
+- **Purpose**: Cursor agent skills (migrated from `.github/skills/`)
+- **Audience**: Cursor AI agent
+- **Files**: 19 skills (all from `.github/skills/`)
+- **All agent-decided** (auto-invoked by context relevance)
+- **Index**: See [`.cursor/README.md`](../.cursor/README.md)
+
+### 3. GitHub Copilot
 
 #### `.github/copilot-instructions.md`
 - **Purpose**: GitHub Copilot-specific instructions
@@ -282,15 +306,15 @@ When updating any configuration:
 
 ## 📊 Configuration Matrix
 
-| Feature | AGENTS.md | .github/copilot | .trae/rules |
-|---------|-----------|-----------------|-------------|
-| **Detail Level** | Medium | Low | High |
-| **Code Examples** | Some | Minimal | Extensive |
-| **Rationale** | Sometimes | Rarely | Always |
-| **Anti-patterns** | Some | No | Yes |
-| **TRAE-specific** | No | No | Yes |
-| **Copilot-specific** | No | Yes | No |
-| **Portable** | ✅ Yes | ❌ No | ❌ No |
+| Feature | AGENTS.md | .github/copilot | .cursor/ | .trae/rules |
+|---------|-----------|-----------------|----------|-------------|
+| **Detail Level** | Medium | Low | Medium | High |
+| **Code Examples** | Some | Minimal | Some | Extensive |
+| **Rationale** | Sometimes | Rarely | Sometimes | Always |
+| **Anti-patterns** | Some | No | Some | Yes |
+| **Agent-specific** | No | Copilot | Cursor | TRAE |
+| **Portable** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Skills Support** | No | Via .github/skills | Via .cursor/skills | No |
 
 ## 🚀 Quick Start
 

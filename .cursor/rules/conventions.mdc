@@ -1,0 +1,84 @@
+---
+description: "Code style, naming conventions, React patterns, caching, styling, i18n, error handling, and performance guidelines."
+globs: "src/**/*.{ts,tsx,js,jsx}"
+alwaysApply: false
+---
+
+# Code Conventions
+
+## TypeScript
+
+- Use TypeScript strict mode
+- Prefer type inference over explicit types
+- Use interfaces for object shapes
+- Use type aliases for unions and primitives
+
+## React Patterns
+
+- Prefer Server Components by default
+- Use `"use client"` directive only when necessary (interactivity, hooks, browser APIs)
+- Use `"use server"` for Server Actions
+- Async components are allowed in Server Components
+
+## Naming Conventions
+
+- Files: `kebab-case.tsx`
+- Components: `PascalCase`
+- Functions: `camelCase`
+- Constants: `UPPER_SNAKE_CASE` for true constants, `camelCase` for config objects
+
+## Caching Strategy (Next.js 16)
+
+- Use `"use cache"` directive in fetch functions
+- Custom cache profiles in `next.config.ts`: `trending`, `movie`, `search`, `genres`
+- Revalidation: `revalidatePath()` and `revalidateTag()` in Server Actions
+- Example tags: `"recommendations"`, `"movie-${movieId}"`
+
+## TMDB API Integration
+
+- All TMDB calls go through `src/lib/tmdb.ts`
+- Mock data used when `TMDB_ACCESS_TOKEN` missing
+- Always pass `locale` parameter for internationalization
+- Cache responses using Next.js caching directives
+
+## Styling System
+
+- **Theme**: "Avant-Garde" (minimalist, high contrast, glassmorphism)
+- **Utilities**: `.glass`, `.glass-hover`, `.text-gradient`
+- **Colors**: `--color-background`, `--color-accent`
+- **Icons**: `lucide-react` for all icons
+- **Approach**: Tailwind classes only, no inline styles
+
+## Internationalization
+
+- Framework: `next-intl` with `[locale]` routing
+- Server Components: `getTranslations()`
+- Client Components: `useTranslations()`
+- TMDB API: Always include `language` parameter
+
+## Environment Variables
+
+- Use `.env.local` for sensitive data
+- Prefix custom vars with `NEXT_PUBLIC_` for client-side access
+- Required vars: `TMDB_ACCESS_TOKEN`, `DATABASE_URL`, `JWT_SECRET`
+
+## Error Handling
+
+- Use try/catch in Server Actions
+- Return user-friendly error messages
+- Log errors to console for debugging
+- Throw `Error("Unauthorized")` for authentication failures
+
+## Performance
+
+- Use Next.js caching for TMDB calls
+- Denormalize data to minimize API calls
+- Use Prisma's `select` for partial data fetching
+
+## Common Pitfalls
+
+1. **Authentication**: Always call `ensureUser()` in Server Actions
+2. **Caching**: Don't forget `"use cache"` directive for TMDB calls
+3. **Internationalization**: Always pass `locale` to TMDB API
+4. **Database**: Use `cuid()` for IDs, not auto-increment
+5. **Styling**: Use Tailwind classes, not inline styles
