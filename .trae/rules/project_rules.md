@@ -1,38 +1,39 @@
+---
+trae_schema_version: "1.2.0"
+last_synced: "2026-02-11"
+synced_from: ".github/copilot-instructions.md"
+official_docs: "https://docs.trae.ai/rules/project-rules"
+---
+
 # Movies Tracker - TRAE Project Rules
 
 This file contains project-specific rules for TRAE AI coding assistant.
 
-## Quick Reference
+- Utiliza `pnpm dlx kill-port <port>` para liberar puertos ocupados durante el desarrollo.
+- Utiliza para correr tsx `pnpm dlx tsx <file>` en lugar de `npx <file>`.
 
-- Use `pnpm dlx kill-port <port>` to free occupied ports during development
-- Use `pnpm dlx tsx <file>` instead of `npx <file>` to run TypeScript files
+## Project Overview
 
-## Technology Stack
+- **Stack**: Next.js 16 (App Router), Prisma ORM, Neon Serverless Postgres, TMDB API, Tailwind CSS 4
+- **Architecture**: Server-first approach. Data fetching in Server Components; mutations in Server Actions
+- **Package Manager**: `pnpm` (v10+)
 
-- **Framework**: Next.js 16 (App Router)
-- **Database**: Neon Serverless Postgres with Prisma ORM
-- **External API**: TMDB (The Movie Database) API
-- **Styling**: Tailwind CSS 4
-- **Package Manager**: pnpm (v10+)
-- **Deployment**: Vercel
+## Big Picture Architecture
 
-## Project Architecture
+### Major Components
 
-### Core Principles
+1. **Frontend**: Next.js 16 App Router with React Server Components
+2. **Backend**: Server Actions for mutations, API routes for external integrations
+3. **Database**: Neon Serverless Postgres with Prisma ORM
+4. **External API**: TMDB API integration for movie data
+5. **Authentication**: JWT-based auth with cookie storage
 
-1. **Server-First Architecture**: Prioritize Server Components for data fetching
-2. **Server Actions for Mutations**: All data mutations through Server Actions
-3. **JWT Authentication**: Custom JWT implementation with cookie-based sessions
-4. **API Integration**: TMDB API for movie data with caching strategy
-
-### Component Structure
+### Data Flow
 
 ```
-Frontend (Next.js App Router with RSC)
-    ↓
-Server Components (Data Fetching) → TMDB API / Prisma
-    ↓
-Server Actions (Mutations) → Database (Neon Postgres)
+User → Next.js App Router → Server Components → TMDB API/Prisma → Database
+                          ↓
+                     Server Actions (mutations)
 ```
 
 ### Service Boundaries
@@ -42,384 +43,238 @@ Server Actions (Mutations) → Database (Neon Postgres)
 - **Watchlist Service**: User-specific movie tracking
 - **Recommendation Service**: Personalized movie suggestions
 
-## Development Commands
+## Critical Developer Workflows
+
+### Build Process
 
 ```bash
-# Install dependencies
-pnpm install
-
 # Development server
 pnpm dev
 
 # Production build
-pnpm build  # Automatically runs prisma generate
+pnpm build  # Runs prisma generate && next build
 
-# Type checking
-pnpm type-check
+# Database sync
+pnpm db:push
+```
 
+### Testing
+
+```bash
 # Linting
 pnpm lint
 
-# Database operations
-pnpm db:push      # Sync Prisma schema with database
-pnpm db:studio    # Open Prisma Studio GUI
+# Type checking
+pnpm type-check
 ```
 
-## Code Style Guidelines
+### Debugging
 
-### TypeScript
+- Use `console.log` in Server Components (visible in terminal)
+- Use browser devtools for Client Components
+- Check Neon database logs for Prisma queries
 
-- Enable strict mode
-- Prefer type inference over explicit types where reasonable
-- Use `interface` for object shapes
-- Use `type` for unions, intersections, and primitives
-- Avoid `any` type; use `unknown` if type is truly unknown
+## Project-Specific Conventions
 
-### React Patterns
+### Caching Strategy (Next.js 16)
 
-- **Default to Server Components**: Use Client Components only when necessary
-- **"use client" directive**: Required for interactivity, hooks, browser APIs
-- **"use server" directive**: Required for Server Actions
-- **Async components**: Allowed and encouraged in Server Components
-- **Error boundaries**: Implement using `error.tsx` files
+- Use `"use cache"` directive in fetch functions
+- Custom cache profiles in `next.config.ts`: `trending`, `movie`, `search`, `genres`
+- Revalidation: `revalidatePath()` and `revalidateTag()` in Server Actions
+- Example tags: `"recommendations"`, `"movie-${movieId}"`
 
-### File Naming
+### Database Patterns
 
-- Component files: `kebab-case.tsx`
-- Component names: `PascalCase`
-- Function names: `camelCase`
-- Constants: `UPPER_SNAKE_CASE` for true constants
-- Config objects: `camelCase`
+- **Denormalization**: Store `title`, `posterPath`, `voteAverage` in related models
+- **Prisma Client**: Always use `src/lib/prisma.ts` instance
+- **ID Generation**: Use `cuid()` for all user-related models
+- **Neon Connection**: Configured via `prisma/adapter-neon`
 
-### Import Organization
+### Authentication System
 
-1. External dependencies (React, Next.js, third-party)
-2. Internal absolute imports (@/...)
-3. Relative imports (../, ./)
-4. Type imports (keep separate or use `import type`)
+#### JWT Authentication Flow
 
-## Next.js 16 Caching Strategy
-
-### Cache Directive Usage
-
-- Use `"use cache"` directive at the top of fetch functions
-- Custom cache profiles defined in `next.config.ts`:
-  - `trending`: Short-lived cache for trending movies
-  - `movie`: Long-lived cache for movie details
-  - `search`: Medium-lived cache for search results
-  - `genres`: Long-lived cache for genre lists
-
-### Cache Revalidation
-
-- Use `revalidatePath()` in Server Actions after mutations
-- Use `revalidateTag()` for granular cache invalidation
-- Standard tags:
-  - `"recommendations"` - User-specific recommendations
-  - `"movie-${movieId}"` - Individual movie data
-  - `"watchlist-${userId}"` - User watchlist
-
-### Example
-
-```typescript
-"use cache"
-export async function getTrendingMovies(locale: string) {
-  const response = await fetch(/* ... */);
-  return response.json();
-}
-
-// In Server Action
-"use server"
-export async function addToWatchlist(movieId: number) {
-  // ... mutation logic
-  revalidateTag(`watchlist-${userId}`);
-  revalidatePath(`/[locale]/watchlist`);
-}
 ```
-
-## Database Patterns (Prisma + Neon)
-
-### Core Principles
-
-1. **Denormalization**: Store frequently accessed data (`title`, `posterPath`, `voteAverage`) directly in related models
-2. **Single Prisma Instance**: Always import from `src/lib/prisma.ts`
-3. **ID Generation**: Use `cuid()` for all user-related models
-4. **Neon Adapter**: Connection configured via `@prisma/adapter-neon`
-
-### Best Practices
-
-- Use `select` to fetch only required fields
-- Leverage Prisma's type safety
-- Use transactions for multi-step operations
-- Handle connection errors gracefully (Neon serverless scaling)
-
-### Example Pattern
-
-```typescript
-import prisma from "@/lib/prisma";
-
-// Good: Select only needed fields
-const movies = await prisma.movie.findMany({
-  select: {
-    id: true,
-    title: true,
-    posterPath: true,
-  },
-});
-
-// Bad: Fetching all fields
-const movies = await prisma.movie.findMany();
-```
-
-## Authentication System
-
-### JWT Flow
-
-1. User submits login → `login()` in `src/lib/auth-actions.ts`
-2. Password verified using scrypt hash from `src/lib/auth-utils.ts`
-3. JWT token created with `signJWT()` (HS256 algorithm)
+1. User submits login form → `login()` in [`src/lib/auth-actions.ts`](src/lib/auth-actions.ts)
+2. Password verified using scrypt hash from [`src/lib/auth-utils.ts`](src/lib/auth-utils.ts)
+3. JWT token created with `signJWT()` using HS256 algorithm
 4. Token stored in `auth_token` cookie (httpOnly, secure, 7-day expiry)
-5. Protected routes use `ensureUser()` from `src/lib/actions.ts`
+5. Subsequent requests use `ensureUser()` from [`src/lib/actions.ts`](src/lib/actions.ts)
 6. User ID extracted from JWT payload for database operations
+```
 
-### Key Files
+#### Key Authentication Files
 
-- `src/lib/auth-actions.ts`: Login/logout/register Server Actions
-- `src/lib/auth-utils.ts`: Password hashing, JWT sign/verify utilities
-- `src/lib/actions.ts`: `ensureUser()` middleware for protected actions
+- [`src/lib/auth-actions.ts`](src/lib/auth-actions.ts): Login/logout/register functions
+- [`src/lib/auth-utils.ts`](src/lib/auth-utils.ts): Password hashing and JWT utilities
+- [`src/lib/actions.ts`](src/lib/actions.ts): `ensureUser()` middleware for Server Actions
 
-### Security Implementation
+#### JWT Implementation Details
 
 - **Algorithm**: HS256 with SHA-256
-- **Secret**: `JWT_SECRET` environment variable (never commit!)
+- **Secret**: `JWT_SECRET` environment variable
 - **Token Structure**: `header.body.signature` (base64url encoded)
-- **Payload**: `{ userId, email, iat }`
-- **Validation**: `timingSafeEqual` prevents timing attacks
-- **Password Hashing**: scrypt with random 16-byte salt
-- **Storage Format**: `hash.salt` in database
+- **Payload**: Contains `userId`, `email`, and `iat` (issued at timestamp)
+- **Validation**: Uses `timingSafeEqual` to prevent timing attacks
 
-### Protected Server Action Pattern
+#### Password Security
+
+- **Hashing**: scrypt with random 16-byte salt
+- **Storage**: `hash.salt` format in database
+- **Verification**: Constant-time comparison to prevent timing attacks
+
+#### Session Management
+
+- **Cookie**: `auth_token` (httpOnly, secure in production)
+- **Expiry**: 7 days from creation
+- **Logout**: Deletes cookie and redirects to home
+
+#### Usage in Server Actions
 
 ```typescript
+// Example: Protected Server Action
 "use server";
 
 import { ensureUser } from "@/lib/actions";
 
 export async function protectedAction() {
   const user = await ensureUser(); // Throws if unauthorized
-  // User is authenticated - proceed with operation
+  // User is authenticated, proceed with operation
   await prisma.someOperation({ where: { userId: user.id } });
 }
 ```
 
-### Session Management
+#### Common Authentication Patterns
 
-- Cookie name: `auth_token`
-- Flags: `httpOnly`, `secure` (production only)
-- Expiry: 7 days from creation
-- Logout: Delete cookie + redirect to home
+1. **Registration**: Hash password → Create user → Redirect to login
+2. **Login**: Verify credentials → Create JWT → Set cookie → Redirect
+3. **Protected Routes**: Call `ensureUser()` → Check user existence → Proceed
+4. **Logout**: Delete cookie → Redirect to home
 
-## TMDB API Integration
+#### Error Handling
 
-### Core Principles
+- Throw `Error("Unauthorized")` for authentication failures
+- Returns 401 status automatically in Next.js
+- User-friendly messages displayed in UI
 
-- **Centralized Access**: All TMDB calls through `src/lib/tmdb.ts`
-- **Mock Fallback**: Mock data when `TMDB_ACCESS_TOKEN` is missing
-- **Internationalization**: Always pass `locale` parameter
-- **Caching**: Use Next.js cache directives for responses
+#### Security Best Practices
 
-### API Configuration
+- Always use `ensureUser()` in Server Actions
+- Never expose JWT secret in client code
+- Use `httpOnly` and `secure` flags for cookies
+- Rotate `JWT_SECRET` in production
+- Use scrypt for password hashing (better than bcrypt for this use case)
 
-- Access token stored in `TMDB_ACCESS_TOKEN` environment variable
-- Base URL: `https://api.themoviedb.org/3`
-- Image base URL: `https://image.tmdb.org/t/p/`
-- Always include `language` parameter for i18n support
+### TMDB API Integration
 
-### Example Implementation
+- All TMDB calls go through `src/lib/tmdb.ts`
+- Mock data used when `TMDB_ACCESS_TOKEN` missing
+- Always pass `locale` parameter for internationalization
+- Cache responses using Next.js caching directives
 
-```typescript
-export async function getMovieDetails(id: number, locale: string) {
-  "use cache";
-  
-  const response = await fetch(
-    `https://api.themoviedb.org/3/movie/${id}?language=${locale}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.TMDB_ACCESS_TOKEN}`,
-      },
-    }
-  );
-  
-  return response.json();
-}
-```
+### Styling System
 
-## Styling System
+- **Theme**: "Avant-Garde" (minimalist, high contrast, glassmorphism)
+- **Utilities**: `.glass`, `.glass-hover`, `.text-gradient`
+- **Colors**: `--color-background`, `--color-accent`
+- **Icons**: `lucide-react` for all icons
 
-### Theme: "Avant-Garde"
+### Internationalization
 
-- Minimalist design language
-- High contrast color palette
-- Glassmorphism effects
-- Smooth transitions and animations
+- Framework: `next-intl` with `[locale]` routing
+- Server Components: `getTranslations()`
+- Client Components: `useTranslations()`
+- TMDB API: Always include `language` parameter
 
-### Tailwind CSS 4
+## Integration Points
 
-- **Approach**: Utility-first, no inline styles
-- **Custom Utilities**: `.glass`, `.glass-hover`, `.text-gradient`
-- **CSS Variables**: `--color-background`, `--color-accent`
-- **Icons**: `lucide-react` library exclusively
+### External Dependencies
 
-### Best Practices
+1. **TMDB API**: Movie data, images, recommendations
+2. **Neon Postgres**: Database storage via Prisma
+3. **NextAuth**: Authentication (JWT)
+4. **Tailwind CSS**: Styling framework
 
-- Use Tailwind classes only, avoid inline `style` attributes
-- Leverage dark mode with `dark:` prefix
-- Use custom utilities for complex effects
-- Keep component styles co-located
+### Cross-Component Communication
 
-## Internationalization (i18n)
+- **Server Actions**: Shared mutations across components
+- **Context API**: User session and theme context
+- **URL Search Params**: Client-side state management
 
-### Framework: next-intl
-
-- **Routing**: `[locale]` dynamic segment in App Router
-- **Server Components**: `getTranslations()` function
-- **Client Components**: `useTranslations()` hook
-- **TMDB API**: Always include `language` parameter matching locale
-
-### Usage Pattern
-
-```typescript
-// Server Component
-import { getTranslations } from "next-intl/server";
-
-export default async function Page() {
-  const t = await getTranslations("HomePage");
-  return <h1>{t("title")}</h1>;
-}
-
-// Client Component
-"use client";
-import { useTranslations } from "next-intl";
-
-export default function Component() {
-  const t = useTranslations("Component");
-  return <button>{t("action")}</button>;
-}
-```
-
-## File Structure Reference
+## Key Files Reference
 
 ### Core Architecture
 
-- `prisma/schema.prisma` - Database schema and models
-- `src/lib/prisma.ts` - Prisma client singleton
-- `src/lib/tmdb.ts` - TMDB API integration layer
-- `src/lib/actions.ts` - Server Actions and auth utilities
+- [`prisma/schema.prisma`](prisma/schema.prisma): Database schema and models
+- [`src/lib/prisma.ts`](src/lib/prisma.ts): Prisma client configuration
+- [`src/lib/tmdb.ts`](src/lib/tmdb.ts): TMDB API integration layer
+- [`src/lib/actions.ts`](src/lib/actions.ts): Server Actions and auth utilities
 
 ### UI Components
 
-- `src/components/navbar.tsx` - Main navigation
-- `src/components/movie-card.tsx` - Movie display card
-- `src/components/theme-toggle.tsx` - Dark/light mode toggle
+- [`src/components/navbar.tsx`](src/components/navbar.tsx): Main navigation
+- [`src/components/movie-card.tsx`](src/components/movie-card.tsx): Movie display component
+- [`src/components/theme-toggle.tsx`](src/components/theme-toggle.tsx): Theme switching
 
-### Pages (App Router)
+### Pages
 
-- `src/app/[locale]/page.tsx` - Home page (trending movies)
-- `src/app/[locale]/movie/[id]/page.tsx` - Movie details page
-- `src/app/[locale]/watchlist/page.tsx` - User watchlist page
+- [`src/app/[locale]/page.tsx`](src/app/[locale]/page.tsx): Home page
+- [`src/app/[locale]/movie/[id]/page.tsx`](src/app/[locale]/movie/[id]/page.tsx): Movie details
+- [`src/app/[locale]/watchlist/page.tsx`](src/app/[locale]/watchlist/page.tsx): User watchlist
 
-## Environment Variables
+## Development Best Practices
 
-### Required Variables
+### Environment Variables
 
-- `TMDB_ACCESS_TOKEN` - TMDB API access token
-- `DATABASE_URL` - Neon Postgres connection string
-- `JWT_SECRET` - Secret key for JWT signing (min 32 characters)
+- Use `.env.local` for sensitive data
+- Prefix custom vars with `NEXT_PUBLIC_` for client-side access
+- Required vars: `TMDB_ACCESS_TOKEN`, `DATABASE_URL`, `JWT_SECRET`
 
-### Configuration
+### Error Handling
 
-- Store in `.env.local` for local development (never commit!)
-- Prefix with `NEXT_PUBLIC_` for client-side access
-- Set in Vercel dashboard for production
-
-## Error Handling
-
-### Server Actions
-
-- Wrap operations in try/catch blocks
+- Use try/catch in Server Actions
 - Return user-friendly error messages
 - Log errors to console for debugging
-- Throw `Error("Unauthorized")` for auth failures (Next.js returns 401)
 
-### Error Boundaries
+### Performance
 
-- Use `error.tsx` files for route-level error handling
-- Provide fallback UI with recovery options
-- Log errors for monitoring
+- Use Next.js caching for TMDB calls
+- Denormalize data to minimize API calls
+- Use Prisma's `select` for partial data fetching
 
-## Performance Guidelines
+### Code Organization
 
-### Data Fetching
+- Keep Server Components in `src/app`
+- Keep Client Components in `src/components`
+- Keep utility functions in `src/lib`
+- Keep hooks in `src/hooks`
 
-- Use Next.js cache directives for TMDB calls
-- Denormalize data to minimize roundtrips
-- Use Prisma `select` for partial fetches
-- Implement pagination for large lists
+## Common Pitfalls
 
-### Component Optimization
+1. **Authentication**: Always call `ensureUser()` in Server Actions
+2. **Caching**: Don't forget `"use cache"` directive for TMDB calls
+3. **Internationalization**: Always pass `locale` to TMDB API
+4. **Database**: Use `cuid()` for IDs, not auto-increment
+5. **Styling**: Use Tailwind classes, not inline styles
 
-- Keep Server Components as default
-- Use Client Components sparingly
-- Lazy load heavy components
-- Optimize images with Next.js Image component
+## Getting Started for AI Agents
 
-## Common Pitfalls to Avoid
+1. **Understand the architecture**: Review the big picture diagram
+2. **Check existing patterns**: Look at key files for examples
+3. **Use the right tools**: Prisma for DB, Server Actions for mutations
+4. **Follow conventions**: Caching, auth, internationalization
+5. **Test locally**: Use mock data when TMDB token not available
 
-1. **Forgetting ensureUser()** - Always call in protected Server Actions
-2. **Missing cache directive** - Add `"use cache"` to TMDB fetches
-3. **Locale parameter** - Always pass to TMDB API calls
-4. **ID generation** - Use `cuid()`, not auto-increment for user data
-5. **Inline styles** - Use Tailwind classes exclusively
-6. **Client Components** - Don't default to "use client" unnecessarily
+# Production Deployment
 
-## Testing Guidelines
+🌐 **Live Demo**: [https://movies-trackers.vercel.app/](https://movies-trackers.vercel.app/)
 
-### Type Safety
+- Deploys automatically on push to main branch via Vercel
 
-- Run `pnpm type-check` before committing
-- Fix TypeScript errors, don't use `@ts-ignore`
-- Ensure Prisma types are generated
-
-### Linting
-
-- Run `pnpm lint` regularly
-- Follow ESLint recommendations
-- Use Prettier for consistent formatting
-
-### Manual Testing
-
-- Test authentication flow (register, login, logout)
-- Verify internationalization across locales
-- Check responsive design on mobile/desktop
-- Test with and without TMDB token (mock fallback)
-
-## Deployment (Vercel)
-
-### Automatic Deployment
-
-- Pushes to `main` branch trigger automatic deployment
-- Build command: `pnpm build`
-- Environment variables configured in Vercel dashboard
-- Production URL: https://movies-trackers.vercel.app/
-
-### Pre-Deployment Checklist
-
-- [ ] All TypeScript errors resolved
-- [ ] Linting passes
-- [ ] Environment variables set in Vercel
-- [ ] Database migrations applied
-- [ ] TMDB API token configured
 
 ## Getting Started for TRAE
+
+When TRAE first encounters this project:
 
 1. Review the architecture diagram above
 2. Examine key files in `src/lib/` for patterns
@@ -428,6 +283,17 @@ export default function Component() {
 5. Follow caching, auth, and i18n conventions
 6. Test with mock data if TMDB token unavailable
 
+
 ---
 
 **Note**: This configuration is specific to TRAE. For universal agent instructions, see `AGENTS.md` in the project root.
+
+## Configuration Cross-References
+
+- **Universal Standard**: See [`/AGENTS.md`](/AGENTS.md)
+- **GitHub Copilot**: See [`/.github/copilot-instructions.md`](/.github/copilot-instructions.md)
+- **TRAE Rules**: See [`/.trae/rules/project_rules.md`](/.trae/rules/project_rules.md)
+- **Skills Library**: See [`/.github/skills/`](/.github/skills/)
+- **TRAE Official Docs**: https://docs.trae.ai/rules/project-rules
+- **Last Updated**: 2026-02-11
+- **Schema Version**: 1.2.0
