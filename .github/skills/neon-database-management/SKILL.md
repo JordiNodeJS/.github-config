@@ -1,173 +1,245 @@
 # Neon Database Management Skill
 
+<!--
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           ⚙️ PROJECT CONFIGURATION                           ║
+║                                                                              ║
+║  Customize these values for your project before using this skill:           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+
+## Project Configuration
+
+```yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED: Set these values for your project
+# ─────────────────────────────────────────────────────────────────────────────
+
+PROJECT_NAME: "The Simpsons API" # Your project's display name
+PROJECT_SLUG: "thesimpsonsapi" # URL-friendly identifier (lowercase, no spaces)
+DB_SCHEMA: "the_simpson" # PostgreSQL schema name
+NEON_PROJECT_ID: "wispy-poetry-52762475" # Neon project ID (from dashboard)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OPTIONAL: Customize paths if your project structure differs
+# ─────────────────────────────────────────────────────────────────────────────
+
+DB_CONFIG_PATH: "app/_lib/db.ts" # Database connection file
+DB_SCHEMA_PATH: "app/_lib/db-schema.ts" # Schema constants file
+DB_UTILS_PATH: "app/_lib/db-utils.ts" # Query utilities file
+DB_TYPES_PATH: "app/_lib/db-types.ts" # TypeScript types file
+REPOSITORIES_PATH: "app/_lib/repositories.ts" # Data access layer
+SERVER_ACTIONS_PATH: "app/_actions" # Server actions directory
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TABLES: Define your project's tables (add/remove as needed)
+# ─────────────────────────────────────────────────────────────────────────────
+
+TABLES:
+  # Core data tables (synced from external source)
+  - characters
+  - episodes
+  - locations
+
+  # User data tables
+  - users
+  - user_episode_progress
+  - character_follows
+  - character_comments
+  - character_favorites
+  - trivia_facts
+  - diary_entries
+  - quote_collections
+  - collection_quotes
+```
+
+---
+
 ## Description
 
-Comprehensive knowledge and utilities for managing Neon PostgreSQL database in The Simpsons API. This skill encapsulates the complete database configuration, schema management, query patterns, and verification processes specific to this application's Neon setup.
+Comprehensive knowledge and utilities for managing Neon PostgreSQL database in **{{PROJECT_NAME}}**. This skill encapsulates the complete database configuration, schema management, query patterns, and verification processes specific to this application's Neon setup.
 
 ## Context
 
-**The Simpsons API** uses **Neon** as its serverless PostgreSQL database provider with a specific architecture designed for optimal performance in serverless environments (Vercel).
+**{{PROJECT_NAME}}** uses **Neon** as its serverless PostgreSQL database provider with a specific architecture designed for optimal performance in serverless environments (Vercel).
 
 ### Key Configuration
 
 - **Provider:** Neon (Serverless PostgreSQL)
-- **Schema:** `the_simpson`
+- **Schema:** `{{DB_SCHEMA}}`
 - **Connection Strategy:** HTTP-based queries via `poolQueryViaFetch = true`
 - **Pattern:** Fully qualified table names (schema.table)
-- **Centralization:** All schema configuration in `app/_lib/db-schema.ts`
+- **Centralization:** All schema configuration in `{{DB_SCHEMA_PATH}}`
 
 ## Architecture Overview
 
 ### Connection Flow
+
 ```
 Next.js App → @neondatabase/serverless → Neon PostgreSQL
             ↓                           ↓
-    poolQueryViaFetch = true      Schema: the_simpson
-    HTTP Direct Connection        Tables: characters, episodes, etc.
+    poolQueryViaFetch = true      Schema: {{DB_SCHEMA}}
+    HTTP Direct Connection        Tables: {{TABLES}}
 ```
 
 ### Critical Files
 
-| File | Purpose |
-|------|---------|
-| `app/_lib/db.ts` | Pool configuration with HTTP fetch enabled |
-| `app/_lib/db-schema.ts` | ⭐ Centralized schema and table constants |
-| `app/_lib/db-utils.ts` | Query utilities with validation & logging |
-| `app/_lib/repositories.ts` | Data access layer with type-safe queries |
-| `app/_actions/*.ts` | Server actions for mutations |
+| File                           | Purpose                                    |
+| ------------------------------ | ------------------------------------------ |
+| `{{DB_CONFIG_PATH}}`           | Pool configuration with HTTP fetch enabled |
+| `{{DB_SCHEMA_PATH}}`           | ⭐ Centralized schema and table constants  |
+| `{{DB_UTILS_PATH}}`            | Query utilities with validation & logging  |
+| `{{REPOSITORIES_PATH}}`        | Data access layer with type-safe queries   |
+| `{{SERVER_ACTIONS_PATH}}/*.ts` | Server actions for mutations               |
 
 ## The Critical Problem We Solved
 
 ### The Issue
-When using Neon with `poolQueryViaFetch = true` (HTTP mode), the driver **ignores session parameters** like `search_path` passed in the connection URL. This caused queries to fail silently in production because PostgreSQL couldn't find tables in the `the_simpson` schema.
+
+When using Neon with `poolQueryViaFetch = true` (HTTP mode), the driver **ignores session parameters** like `search_path` passed in the connection URL. This caused queries to fail silently in production because PostgreSQL couldn't find tables in the `{{DB_SCHEMA}}` schema.
 
 ### The Solution
+
 Use **fully qualified table names** in ALL queries:
+
 ```typescript
 // ❌ WRONG (depends on search_path, breaks in HTTP mode)
 SELECT * FROM characters
 
 // ✅ CORRECT (explicit schema, works everywhere)
-SELECT * FROM the_simpson.characters
+SELECT * FROM {{DB_SCHEMA}}.characters
 ```
 
 ### Our Implementation
-Instead of hardcoding `the_simpson.` everywhere, we centralized it:
+
+Instead of hardcoding `{{DB_SCHEMA}}.` everywhere, we centralized it:
 
 ```typescript
-// app/_lib/db-schema.ts
-export const DB_SCHEMA = "the_simpson" as const;
+// {{DB_SCHEMA_PATH}}
+export const DB_SCHEMA = "{{DB_SCHEMA}}" as const;
 
 export const TABLES = {
   characters: `${DB_SCHEMA}.characters`,
   episodes: `${DB_SCHEMA}.episodes`,
   users: `${DB_SCHEMA}.users`,
-  // ... all 12 tables
+  // ... add your project's tables
 } as const;
 
 // Usage in queries
-import { TABLES } from "@/app/_lib/db-schema";
+import { TABLES } from "@/{{DB_SCHEMA_PATH}}";
 await query(`SELECT * FROM ${TABLES.characters}`);
 ```
 
 ## Database Schema Structure
 
-### Core Tables (Synced from TheSimponsAPI.com)
+> **Note:** The tables below are examples from {{PROJECT_NAME}}. Customize the `TABLES` section in the Project Configuration above to match your project's actual tables.
+
+### Core Tables (Synced from External Source)
+
 ```sql
-the_simpson.characters      -- Character data
-the_simpson.episodes        -- Episode catalog
-the_simpson.locations       -- Springfield locations
+{{DB_SCHEMA}}.characters      -- Character data
+{{DB_SCHEMA}}.episodes        -- Episode catalog
+{{DB_SCHEMA}}.locations       -- Location data
 ```
 
 ### User Data Tables
+
 ```sql
-the_simpson.users                   -- User accounts
-the_simpson.user_episode_progress   -- Watch tracking
-the_simpson.character_follows       -- Following relationships
-the_simpson.character_comments      -- User comments
-the_simpson.character_favorites     -- Favorites
-the_simpson.trivia_facts            -- Community trivia
-the_simpson.diary_entries           -- User diary
-the_simpson.quote_collections       -- Quote collections
-the_simpson.collection_quotes       -- Quotes in collections
+{{DB_SCHEMA}}.users                   -- User accounts
+{{DB_SCHEMA}}.user_episode_progress   -- User progress tracking
+{{DB_SCHEMA}}.character_follows       -- Following relationships
+{{DB_SCHEMA}}.character_comments      -- User comments
+{{DB_SCHEMA}}.character_favorites     -- Favorites
+{{DB_SCHEMA}}.trivia_facts            -- Community trivia
+{{DB_SCHEMA}}.diary_entries           -- User diary
+{{DB_SCHEMA}}.quote_collections       -- Quote collections
+{{DB_SCHEMA}}.collection_quotes       -- Quotes in collections
 ```
 
 ## Best Practices
 
 ### 1. Always Use TABLES Constants
+
 ```typescript
 // ✅ GOOD
-import { TABLES } from "@/app/_lib/db-schema";
+import { TABLES } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
 await pool.query(`SELECT * FROM ${TABLES.characters} WHERE id = $1`, [id]);
 
 // ❌ BAD
-await pool.query(`SELECT * FROM the_simpson.characters WHERE id = $1`, [id]);
+await pool.query(`SELECT * FROM {{DB_SCHEMA}}.characters WHERE id = $1`, [id]);
 
 // ❌ WORSE
 await pool.query(`SELECT * FROM characters WHERE id = $1`, [id]);
 ```
 
 ### 2. Use Type-Safe Repositories
+
 ```typescript
 // ✅ GOOD - Use existing repositories
-import { findCharacterById } from "@/app/_lib/repositories";
+import { findCharacterById } from "@/{{REPOSITORIES_PATH.replace('.ts', '')}}";
 const character = await findCharacterById(1);
 
 // ⚠️ Only if repository doesn't exist
-import { queryOne } from "@/app/_lib/db-utils";
-import { TABLES } from "@/app/_lib/db-schema";
-const result = await queryOne(`SELECT * FROM ${TABLES.characters} WHERE id = $1`, [1]);
+import { queryOne } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
+import { TABLES } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
+const result = await queryOne(
+  `SELECT * FROM ${TABLES.characters} WHERE id = $1`,
+  [1],
+);
 ```
 
 ### 3. Server Actions Pattern
+
 ```typescript
 "use server";
 
-import { execute } from "@/app/_lib/db-utils";
-import { TABLES } from "@/app/_lib/db-schema";
+import { execute } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
+import { TABLES } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
 import { getCurrentUser } from "@/app/_lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function myAction(data: SomeData) {
   const user = await getCurrentUser();
-  
+
   await execute(
     `INSERT INTO ${TABLES.my_table} (user_id, field) VALUES ($1, $2)`,
-    [user.id, data.field]
+    [user.id, data.field],
   );
-  
+
   revalidatePath("/my-page");
 }
 ```
 
 ### 4. Query Utilities
+
 ```typescript
 // Read queries
-import { query, queryOne } from "@/app/_lib/db-utils";
+import { query, queryOne } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
 
 // Multiple rows
 const characters = await query<DBCharacter>(
-  `SELECT * FROM ${TABLES.characters} LIMIT 10`
+  `SELECT * FROM ${TABLES.characters} LIMIT 10`,
 );
 
 // Single row (returns null if not found)
 const character = await queryOne<DBCharacter>(
   `SELECT * FROM ${TABLES.characters} WHERE id = $1`,
-  [1]
+  [1],
 );
 
 // Write operations
-import { execute } from "@/app/_lib/db-utils";
+import { execute } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
 
 const rowCount = await execute(
   `DELETE FROM ${TABLES.diary_entries} WHERE id = $1`,
-  [entryId]
+  [entryId],
 );
 ```
 
 ## Development Features
 
 ### Automatic Validation (Development Only)
+
 The system automatically validates queries in development:
 
 ```typescript
@@ -179,16 +251,18 @@ await query(`SELECT * FROM ${TABLES.users}`); // ✅ No warning
 ```
 
 ### Query Logging (Development Only)
+
 All queries are logged with params for easy debugging:
 
 ```console
-✅ Query executed: { 
+✅ Query executed: {
   sql: 'SELECT * FROM the_simpson.characters WHERE id = $1',
-  params: [1] 
+  params: [1]
 }
 ```
 
 Error logging includes context:
+
 ```console
 ❌ Query failed: {
   sql: 'SELECT * FROM the_simpson.invalid_table',
@@ -208,8 +282,9 @@ node .github/skills/neon-database-management/check-db-config.js
 ```
 
 This checks:
+
 - ✅ All required files exist
-- ✅ Schema is correctly configured
+- ✅ Schema is correctly configured (`{{DB_SCHEMA}}`)
 - ✅ All Server Actions import and use TABLES
 - ✅ repositories.ts uses TABLES
 - ✅ No hardcoded schema references
@@ -224,8 +299,9 @@ pnpm dlx tsx scripts/verify-db.ts
 ```
 
 This checks:
+
 - ✅ Connection to Neon
-- ✅ Schema `the_simpson` exists
+- ✅ Schema `{{DB_SCHEMA}}` exists
 - ✅ All expected tables present
 - ✅ Sample queries work
 - ✅ Row counts for critical tables
@@ -235,7 +311,9 @@ This checks:
 ### Adding a New Table
 
 1. **Update db-schema.ts:**
+
    ```typescript
+   // {{DB_SCHEMA_PATH}}
    export const TABLES = {
      // ... existing tables
      myNewTable: table("my_new_table"),
@@ -243,7 +321,9 @@ This checks:
    ```
 
 2. **Create type in db-types.ts:**
+
    ```typescript
+   // {{DB_TYPES_PATH}}
    export interface DBMyNewTable extends QueryResultRow {
      id: number;
      field1: string;
@@ -253,18 +333,20 @@ This checks:
 
 3. **Add repository functions:**
    ```typescript
+   // {{REPOSITORIES_PATH}}
    export async function findMyNewTableData(): Promise<DBMyNewTable[]> {
      return query<DBMyNewTable>(
-       `SELECT * FROM ${TABLES.myNewTable} ORDER BY created_at DESC`
+       `SELECT * FROM ${TABLES.myNewTable} ORDER BY created_at DESC`,
      );
    }
    ```
 
 ### Changing the Schema Name
 
-If you need to change from `the_simpson` to another schema:
+If you need to change from `{{DB_SCHEMA}}` to another schema:
 
-1. Edit ONE line in `app/_lib/db-schema.ts`:
+1. Edit ONE line in `{{DB_SCHEMA_PATH}}`:
+
    ```typescript
    export const DB_SCHEMA = "new_schema_name" as const;
    ```
@@ -288,17 +370,18 @@ If you need to change from `the_simpson` to another schema:
 
 When creating new database operations:
 
-- [ ] Import `TABLES` from `@/app/_lib/db-schema`
+- [ ] Import `TABLES` from `@/{{DB_SCHEMA_PATH.replace('.ts', '')}}`
 - [ ] Use `${TABLES.tableName}` instead of hardcoding
-- [ ] Use `query`, `queryOne`, or `execute` from `db-utils`
-- [ ] Add type for result using interfaces from `db-types.ts`
+- [ ] Use `query`, `queryOne`, or `execute` from `{{DB_UTILS_PATH.replace('.ts', '')}}`
+- [ ] Add type for result using interfaces from `{{DB_TYPES_PATH}}`
 - [ ] Test in development to see validation warnings
 - [ ] Run `node .github/skills/neon-database-management/check-db-config.js`
-- [ ] Verify no hardcoded `the_simpson.` in your code
+- [ ] Verify no hardcoded `{{DB_SCHEMA}}.` in your code
 
 ## Neon-Specific Considerations
 
 ### Connection Pooling
+
 ```typescript
 // ✅ CORRECT - Use pool.query() directly
 const result = await pool.query(sql, params);
@@ -310,6 +393,7 @@ client.release();
 ```
 
 ### Environment Variables
+
 ```typescript
 // Required in .env.local
 DATABASE_URL=postgresql://user:pass@ep-xxx.us-west-2.aws.neon.tech/neondb?sslmode=require
@@ -319,6 +403,7 @@ NEXT_PUBLIC_NEON_PROJECT=project-id-here
 ```
 
 ### Performance Tips
+
 - ✅ HTTP mode (`poolQueryViaFetch = true`) is fastest for Vercel
 - ✅ Qualified table names avoid schema lookup overhead
 - ✅ Use `pool.query()` for one-off queries
@@ -328,37 +413,46 @@ NEXT_PUBLIC_NEON_PROJECT=project-id-here
 ## Troubleshooting
 
 ### Problem: "relation does not exist"
+
 **Cause:** Unqualified table name or wrong schema
-**Fix:** 
+**Fix:**
+
 ```typescript
 // Change this:
-await query(`SELECT * FROM characters`)
+await query(`SELECT * FROM characters`);
 
 // To this:
-await query(`SELECT * FROM ${TABLES.characters}`)
+await query(`SELECT * FROM ${TABLES.characters}`);
 ```
 
 ### Problem: "Query works in dev but fails in production"
+
 **Cause:** `search_path` ignored in HTTP mode
 **Fix:** Always use qualified table names via `TABLES`
 
 ### Problem: "DATABASE_URL not defined"
+
 **Cause:** Missing environment variable
 **Fix:** Add to `.env.local`:
+
 ```
 DATABASE_URL=your-neon-connection-string
 ```
 
 ### Problem: "Schema validation warnings"
+
 **Cause:** Hardcoded table names detected
 **Fix:** Run verification and update to use `TABLES`:
+
 ```bash
 node .github/skills/neon-database-management/check-db-config.js
 ```
 
 ### Problem: "Connection timeout"
+
 **Cause:** Cold start, network issues, or too many connections
 **Fix:**
+
 ```typescript
 // 1. Increase timeout in pool configuration
 const pool = new Pool({
@@ -374,8 +468,10 @@ neonConfig.poolQueryViaFetch = true;
 ```
 
 ### Problem: "Too many connections"
+
 **Cause:** Serverless functions opening many parallel connections
 **Fix:**
+
 ```typescript
 // Already solved by HTTP mode
 neonConfig.poolQueryViaFetch = true;
@@ -385,17 +481,21 @@ neonConfig.poolQueryViaFetch = true;
 ```
 
 ### Problem: "Permission denied for schema"
+
 **Cause:** Role doesn't have access to schema
 **Fix:** Via Neon MCP or SQL console:
+
 ```sql
-GRANT USAGE ON SCHEMA the_simpson TO neondb_owner;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA the_simpson TO neondb_owner;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA the_simpson TO neondb_owner;
+GRANT USAGE ON SCHEMA {{DB_SCHEMA}} TO neondb_owner;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {{DB_SCHEMA}} TO neondb_owner;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {{DB_SCHEMA}} TO neondb_owner;
 ```
 
 ### Problem: "Column does not exist"
+
 **Cause:** Schema drift between code and database
 **Fix:**
+
 ```bash
 # 1. Check actual schema
 mcp_neon_describe_table_schema
@@ -407,15 +507,17 @@ mcp_neon_run_sql with ALTER TABLE statement
 ```
 
 ### Problem: "Duplicate key violates unique constraint"
+
 **Cause:** Trying to insert existing primary key
 **Fix:**
+
 ```typescript
 // Use UPSERT pattern
 await execute(
   `INSERT INTO ${TABLES.characters} (id, name)
    VALUES ($1, $2)
    ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
-  [id, name]
+  [id, name],
 );
 ```
 
@@ -429,26 +531,26 @@ await execute(
 
 ```sql
 -- Check existing indexes
-SELECT 
+SELECT
   schemaname,
   tablename,
   indexname,
   indexdef
 FROM pg_indexes
-WHERE schemaname = 'the_simpson'
+WHERE schemaname = '{{DB_SCHEMA}}'
 ORDER BY tablename, indexname;
 
 -- Create index for frequent queries
-CREATE INDEX CONCURRENTLY idx_characters_name 
-ON the_simpson.characters(name);
+CREATE INDEX CONCURRENTLY idx_characters_name
+ON {{DB_SCHEMA}}.characters(name);
 
 -- Create composite index for filtered queries
-CREATE INDEX CONCURRENTLY idx_episodes_season_number 
-ON the_simpson.episodes(season, episode_number);
+CREATE INDEX CONCURRENTLY idx_episodes_season_number
+ON {{DB_SCHEMA}}.episodes(season, episode_number);
 
 -- Partial index for common filter
-CREATE INDEX CONCURRENTLY idx_users_active 
-ON the_simpson.users(id) 
+CREATE INDEX CONCURRENTLY idx_users_active
+ON {{DB_SCHEMA}}.users(id)
 WHERE deleted_at IS NULL;
 ```
 
@@ -459,10 +561,10 @@ WHERE deleted_at IS NULL;
 // Via Neon MCP:
 mcp_neon_explain_sql_statement({
   params: {
-    projectId: "wispy-poetry-52762475",
-    sql: "SELECT * FROM the_simpson.characters WHERE name LIKE '%Simpson%'",
-    analyze: true
-  }
+    projectId: "{{NEON_PROJECT_ID}}",
+    sql: "SELECT * FROM {{DB_SCHEMA}}.characters WHERE name LIKE '%Simpson%'",
+    analyze: true,
+  },
 });
 
 // Look for:
@@ -489,7 +591,10 @@ neonConfig.poolQueryViaFetch = true; // HTTP mode - best for serverless
 ```typescript
 // ❌ SLOW: N+1 queries
 for (const char of characters) {
-  const episodes = await query(`SELECT * FROM ${TABLES.episodes} WHERE character_id = $1`, [char.id]);
+  const episodes = await query(
+    `SELECT * FROM ${TABLES.episodes} WHERE character_id = $1`,
+    [char.id],
+  );
 }
 
 // ✅ FAST: Single query with JOIN
@@ -500,10 +605,10 @@ const data = await query(`
 `);
 
 // ✅ FAST: Batch query
-const characterIds = characters.map(c => c.id);
+const characterIds = characters.map((c) => c.id);
 const episodes = await query(
   `SELECT * FROM ${TABLES.episodes} WHERE character_id = ANY($1)`,
-  [characterIds]
+  [characterIds],
 );
 ```
 
@@ -514,20 +619,26 @@ const episodes = await query(
 await query(`SELECT * FROM ${TABLES.characters} LIMIT 20 OFFSET 10000`);
 
 // ✅ FAST: Cursor-based pagination
-await query(`
+await query(
+  `
   SELECT * FROM ${TABLES.characters}
   WHERE id > $1
   ORDER BY id
   LIMIT 20
-`, [lastSeenId]);
+`,
+  [lastSeenId],
+);
 
 // ✅ FAST: Keyset pagination for sorted results
-await query(`
+await query(
+  `
   SELECT * FROM ${TABLES.characters}
   WHERE (created_at, id) < ($1, $2)
   ORDER BY created_at DESC, id DESC
   LIMIT 20
-`, [lastCreatedAt, lastId]);
+`,
+  [lastCreatedAt, lastId],
+);
 ```
 
 ### Slow Query Detection
@@ -538,10 +649,10 @@ Use Neon MCP to identify slow queries:
 // List slow queries from pg_stat_statements
 mcp_neon_list_slow_queries({
   params: {
-    projectId: "wispy-poetry-52762475",
+    projectId: "{{NEON_PROJECT_ID}}",
     minExecutionTime: 100, // ms
-    limit: 10
-  }
+    limit: 10,
+  },
 });
 ```
 
@@ -557,18 +668,18 @@ Neon's branching creates instant point-in-time copies:
 // Create backup branch before risky operation
 mcp_neon_create_branch({
   params: {
-    projectId: "wispy-poetry-52762475",
+    projectId: "{{NEON_PROJECT_ID}}",
     branchName: "backup-2026-01-14",
-    parentBranchId: "main" // or specific branch ID
-  }
+    parentBranchId: "main", // or specific branch ID
+  },
 });
 
 // After verification, delete old backups
 mcp_neon_delete_branch({
   params: {
-    projectId: "wispy-poetry-52762475",
-    branchId: "backup-old-branch-id"
-  }
+    projectId: "{{NEON_PROJECT_ID}}",
+    branchId: "backup-old-branch-id",
+  },
 });
 ```
 
@@ -590,13 +701,13 @@ Neon supports PITR with branching:
 
 ```bash
 # Export using pg_dump (requires psql installed)
-pg_dump "$DATABASE_URL" --schema=the_simpson --format=custom -f backup.dump
+pg_dump "$DATABASE_URL" --schema={{DB_SCHEMA}} --format=custom -f backup.dump
 
 # Export to SQL
-pg_dump "$DATABASE_URL" --schema=the_simpson --format=plain -f backup.sql
+pg_dump "$DATABASE_URL" --schema={{DB_SCHEMA}} --format=plain -f backup.sql
 
 # Export specific table
-pg_dump "$DATABASE_URL" --table=the_simpson.characters -f characters.sql
+pg_dump "$DATABASE_URL" --table={{DB_SCHEMA}}.characters -f characters.sql
 ```
 
 ### Pre-Migration Backup Checklist
@@ -614,9 +725,9 @@ pg_dump "$DATABASE_URL" --table=the_simpson.characters -f characters.sql
 ### Development Data Setup
 
 ```typescript
-// app/_lib/seed.ts
-import { execute, query } from "./db-utils";
-import { TABLES } from "./db-schema";
+// scripts/seed.ts (or your preferred location)
+import { execute, query } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
+import { TABLES } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
 
 export async function seedDatabase() {
   // Check if already seeded
@@ -626,21 +737,19 @@ export async function seedDatabase() {
     return;
   }
 
-  // Seed characters
-  const characters = [
-    { id: 1, name: "Homer Simpson", occupation: "Safety Inspector" },
-    { id: 2, name: "Marge Simpson", occupation: "Homemaker" },
-    { id: 3, name: "Bart Simpson", occupation: "Student" },
-    { id: 4, name: "Lisa Simpson", occupation: "Student" },
-    { id: 5, name: "Maggie Simpson", occupation: "Baby" },
+  // Seed your project's data
+  const items = [
+    { id: 1, name: "Item 1", description: "Description 1" },
+    { id: 2, name: "Item 2", description: "Description 2" },
+    // ... add your seed data
   ];
 
-  for (const char of characters) {
+  for (const item of items) {
     await execute(
-      `INSERT INTO ${TABLES.characters} (id, name, occupation)
+      `INSERT INTO ${TABLES.your_table} (id, name, description)
        VALUES ($1, $2, $3)
        ON CONFLICT (id) DO NOTHING`,
-      [char.id, char.name, char.occupation]
+      [item.id, item.name, item.description],
     );
   }
 
@@ -653,67 +762,55 @@ export async function seedDatabase() {
 ```
 scripts/
 ├── fixtures/
-│   ├── characters.json
-│   ├── episodes.json
-│   └── locations.json
+│   ├── table1.json
+│   ├── table2.json
+│   └── table3.json
 ├── seed.ts
 └── reset-db.ts
 ```
 
-**characters.json:**
+**Example fixture (table1.json):**
+
 ```json
 [
   {
     "id": 1,
-    "name": "Homer Simpson",
-    "occupation": "Safety Inspector",
-    "catchphrase": "D'oh!"
+    "name": "Item 1",
+    "field": "value1"
   },
   {
     "id": 2,
-    "name": "Marge Simpson",
-    "occupation": "Homemaker"
+    "name": "Item 2",
+    "field": "value2"
   }
 ]
 ```
 
 **seed.ts:**
+
 ```typescript
-import { execute } from "@/app/_lib/db-utils";
-import { TABLES } from "@/app/_lib/db-schema";
-import characters from "./fixtures/characters.json";
-import episodes from "./fixtures/episodes.json";
+import { execute } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
+import { TABLES } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
+import table1Data from "./fixtures/table1.json";
+import table2Data from "./fixtures/table2.json";
 
 async function seed() {
   console.log("Starting database seed...");
 
-  // Seed characters
-  for (const char of characters) {
+  // Seed table1
+  for (const item of table1Data) {
     await execute(
-      `INSERT INTO ${TABLES.characters} (id, name, occupation, catchphrase)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO ${TABLES.table1} (id, name, field)
+       VALUES ($1, $2, $3)
        ON CONFLICT (id) DO UPDATE SET
          name = EXCLUDED.name,
-         occupation = EXCLUDED.occupation,
-         catchphrase = EXCLUDED.catchphrase`,
-      [char.id, char.name, char.occupation, char.catchphrase || null]
+         field = EXCLUDED.field`,
+      [item.id, item.name, item.field],
     );
   }
-  console.log(`✓ Seeded ${characters.length} characters`);
+  console.log(`✓ Seeded ${table1Data.length} items to table1`);
 
-  // Seed episodes
-  for (const ep of episodes) {
-    await execute(
-      `INSERT INTO ${TABLES.episodes} (id, title, season, episode_number)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (id) DO UPDATE SET
-         title = EXCLUDED.title,
-         season = EXCLUDED.season,
-         episode_number = EXCLUDED.episode_number`,
-      [ep.id, ep.title, ep.season, ep.episode_number]
-    );
-  }
-  console.log(`✓ Seeded ${episodes.length} episodes`);
+  // Add more tables as needed...
 
   console.log("Seed complete!");
 }
@@ -725,26 +822,19 @@ seed().catch(console.error);
 
 ```typescript
 // scripts/reset-db.ts
-import { execute } from "@/app/_lib/db-utils";
-import { TABLES, DB_SCHEMA } from "@/app/_lib/db-schema";
+import { execute } from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
+import { TABLES, DB_SCHEMA } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
 
 async function resetDatabase() {
   console.log("⚠️  Resetting database...");
-  
+
   // Truncate in order (respecting foreign keys)
+  // IMPORTANT: Order matters - truncate dependent tables first
   const tablesToTruncate = [
-    TABLES.collection_quotes,
-    TABLES.quote_collections,
-    TABLES.trivia_facts,
-    TABLES.diary_entries,
-    TABLES.character_favorites,
-    TABLES.character_comments,
-    TABLES.character_follows,
-    TABLES.user_episode_progress,
-    TABLES.users,
-    TABLES.episodes,
-    TABLES.locations,
-    TABLES.characters,
+    // Add your project's tables in dependency order
+    // Child tables first, then parent tables
+    TABLES.child_table,
+    TABLES.parent_table,
   ];
 
   for (const table of tablesToTruncate) {
@@ -772,98 +862,96 @@ pnpm dlx tsx scripts/reset-db.ts && pnpm dlx tsx scripts/seed.ts
 
 ## Query Examples by Table
 
-### Characters Table
+> **Note:** These examples use table names from {{PROJECT_NAME}}. Replace with your actual table names defined in the `TABLES` configuration.
+
+### Basic CRUD Operations
 
 ```typescript
-import { query, queryOne, execute } from "@/app/_lib/db-utils";
-import { TABLES } from "@/app/_lib/db-schema";
+import {
+  query,
+  queryOne,
+  execute,
+} from "@/{{DB_UTILS_PATH.replace('.ts', '')}}";
+import { TABLES } from "@/{{DB_SCHEMA_PATH.replace('.ts', '')}}";
 
-// Get all characters
-const characters = await query(`SELECT * FROM ${TABLES.characters} ORDER BY name`);
+// Get all records
+const items = await query(`SELECT * FROM ${TABLES.your_table} ORDER BY name`);
 
-// Get character by ID
-const homer = await queryOne(
-  `SELECT * FROM ${TABLES.characters} WHERE id = $1`,
-  [1]
+// Get by ID
+const item = await queryOne(
+  `SELECT * FROM ${TABLES.your_table} WHERE id = $1`,
+  [1],
 );
 
-// Search characters
-const simpsons = await query(
-  `SELECT * FROM ${TABLES.characters} WHERE name ILIKE $1`,
-  ['%simpson%']
+// Search with ILIKE
+const results = await query(
+  `SELECT * FROM ${TABLES.your_table} WHERE name ILIKE $1`,
+  ["%search_term%"],
 );
 
-// Get character with episode count
+// Insert
+await execute(
+  `INSERT INTO ${TABLES.your_table} (name, field) VALUES ($1, $2)`,
+  ["Name", "value"],
+);
+
+// Update
+await execute(`UPDATE ${TABLES.your_table} SET name = $1 WHERE id = $2`, [
+  "New Name",
+  1,
+]);
+
+// Delete
+await execute(`DELETE FROM ${TABLES.your_table} WHERE id = $1`, [1]);
+```
+
+### JOIN Queries
+
+```typescript
+// Get related data with JOIN
+const withRelated = await query(
+  `
+  SELECT 
+    t1.*,
+    t2.name as related_name
+  FROM ${TABLES.table1} t1
+  LEFT JOIN ${TABLES.table2} t2 ON t2.table1_id = t1.id
+  WHERE t1.user_id = $1
+  ORDER BY t1.created_at DESC
+`,
+  [userId],
+);
+
+// Aggregation with GROUP BY
 const withStats = await query(`
   SELECT 
-    c.*,
-    COUNT(DISTINCT uep.episode_id) as episodes_watched
-  FROM ${TABLES.characters} c
-  LEFT JOIN ${TABLES.user_episode_progress} uep ON uep.character_id = c.id
-  GROUP BY c.id
-  ORDER BY episodes_watched DESC
+    t1.*,
+    COUNT(t2.id) as related_count
+  FROM ${TABLES.table1} t1
+  LEFT JOIN ${TABLES.table2} t2 ON t2.table1_id = t1.id
+  GROUP BY t1.id
+  ORDER BY related_count DESC
 `);
 ```
 
-### Episodes Table
+### Upsert Pattern
 
 ```typescript
-// Get episodes by season
-const season5 = await query(
-  `SELECT * FROM ${TABLES.episodes} 
-   WHERE season = $1 
-   ORDER BY episode_number`,
-  [5]
-);
-
-// Get episode with user progress
-const episodeWithProgress = await queryOne(`
-  SELECT 
-    e.*,
-    uep.watched,
-    uep.watched_at
-  FROM ${TABLES.episodes} e
-  LEFT JOIN ${TABLES.user_episode_progress} uep 
-    ON uep.episode_id = e.id AND uep.user_id = $1
-  WHERE e.id = $2
-`, [userId, episodeId]);
-```
-
-### User Data Tables
-
-```typescript
-// Get user's diary entries
-const diary = await query(`
-  SELECT de.*, c.name as character_name
-  FROM ${TABLES.diary_entries} de
-  JOIN ${TABLES.characters} c ON c.id = de.character_id
-  WHERE de.user_id = $1
-  ORDER BY de.created_at DESC
-`, [userId]);
-
-// Get user's collections with quote count
-const collections = await query(`
-  SELECT 
-    qc.*,
-    COUNT(cq.id) as quote_count
-  FROM ${TABLES.quote_collections} qc
-  LEFT JOIN ${TABLES.collection_quotes} cq ON cq.collection_id = qc.id
-  WHERE qc.user_id = $1
-  GROUP BY qc.id
-  ORDER BY qc.created_at DESC
-`, [userId]);
-
-// Add trivia fact
+// Insert or update on conflict
 await execute(
-  `INSERT INTO ${TABLES.trivia_facts} (character_id, fact, submitted_by)
-   VALUES ($1, $2, $3)`,
-  [characterId, factText, userId]
+  `INSERT INTO ${TABLES.your_table} (id, name, field)
+   VALUES ($1, $2, $3)
+   ON CONFLICT (id) DO UPDATE SET
+     name = EXCLUDED.name,
+     field = EXCLUDED.field`,
+  [id, name, field],
 );
 ```
 
 ## When to Use This Skill
 
 Use this skill when:
+
 - ✅ Creating new database queries
 - ✅ Adding new tables or schemas
 - ✅ Debugging database connection issues
@@ -878,6 +966,7 @@ Use this skill when:
 ## Success Metrics
 
 A properly configured Neon setup should have:
+
 - ✅ 0 hardcoded schema references
 - ✅ All queries using `TABLES.*`
 - ✅ Validation warnings only in development
@@ -890,12 +979,13 @@ A properly configured Neon setup should have:
 
 - [Neon Documentation](https://neon.tech/docs)
 - [Neon Serverless Driver](https://github.com/neondatabase/serverless)
-- [docs/DEPLOYMENT_LESSONS.md](../../docs/DEPLOYMENT_LESSONS.md) - Our learnings
+- [docs/DEPLOYMENT_LESSONS.md](../../docs/DEPLOYMENT_LESSONS.md) - Project learnings
 - [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) - System design
-- [app/_lib/db-schema.ts](../../app/_lib/db-schema.ts) - Source of truth
+- [{{DB_SCHEMA_PATH}}](../../{{DB_SCHEMA_PATH}}) - Source of truth for schema
 
 ---
 
-**Last Updated:** January 14, 2026  
+**Last Updated:** February 11, 2026  
 **Maintained By:** Development Team  
-**Status:** ✅ Production Ready
+**Status:** ✅ Production Ready  
+**Project:** {{PROJECT_NAME}}
